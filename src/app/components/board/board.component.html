@@ -1,0 +1,220 @@
+<div class="board-layout">
+  <header class="board-header">
+    <div style="display: flex; align-items: center; gap: 1rem;">
+      <a routerLink="/" class="btn-ghost" style="text-decoration: none; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; font-weight: 600;">←</a>
+      <h1 style="font-size: 1.125rem;">{{ project()?.name }}</h1>
+    </div>
+    <div style="display: flex; gap: 0.75rem;">
+      <button class="btn-primary" (click)="showAddColumn.set(true)">
+        <span style="font-size: 1.1rem; line-height: 1;">+</span> New Column
+      </button>
+    </div>
+  </header>
+
+  <main class="board-main" cdkDropListGroup>
+    @for (column of project()?.columns; track column.id) {
+      <div class="board-column">
+        <div class="column-header">
+          <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1">
+            <h3 class="column-title">{{ column.title }}</h3>
+            <span class="count-badge">{{ column.tasks.length }}</span>
+          </div>
+          <div class="column-actions">
+            @if (!column.isDefault) {
+              <button class="icon-btn-small" (click)="startEditColumn(column)" title="Rename Column">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+              </button>
+              <button class="icon-btn-small delete" (click)="showDeleteColumn.set({columnId: column.id})" title="Delete Column">
+                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              </button>
+            }
+          </div>
+        </div>
+
+        <div 
+          class="task-list"
+          cdkDropList
+          [id]="column.id"
+          [cdkDropListData]="column.tasks"
+          (cdkDropListDropped)="drop($event, column.id)"
+        >
+          @for (task of column.tasks; track task.id) {
+            <div 
+              class="task-card" 
+              cdkDrag
+              [cdkDragData]="task"
+              (click)="selectedTask.set(task)"
+            >
+              <div class="task-content">
+                <div class="task-title">{{ task.title }}</div>
+                <div class="task-actions">
+                  <button class="icon-btn-small" (click)="$event.stopPropagation(); editingTask.set({columnId: column.id, task}); editTaskTitle.set(task.title)" title="Edit">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                  </button>
+                  <button class="icon-btn-small delete" (click)="deleteTask(column.id, task.id, $event)" title="Delete">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                  </button>
+                </div>
+              </div>
+              <div class="task-footer">
+                <span class="time-badge">
+                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                   {{ formatDuration(Date.now() - task.timeLogs[task.timeLogs.length-1].startTime) }}
+                </span>
+              </div>
+            </div>
+          }
+          <button class="add-task-btn" (click)="showAddTask.set({columnId: column.id})">
+            ＋ Add Task
+          </button>
+        </div>
+      </div>
+    }
+  </main>
+</div>
+
+<!-- Add Column Modal -->
+@if (showAddColumn()) {
+<div class="modal-overlay">
+  <div class="modal-content">
+    <h3 style="margin-bottom: 0.5rem;">New Column</h3>
+    <p>Add a new phase to your workflow perfectly suited to your needs.</p>
+    <input 
+      type="text" 
+      [(ngModel)]="newColumnTitle" 
+      placeholder="e.g. In Review"
+      (keyup.enter)="addColumn()"
+      style="margin-bottom: 1.5rem;"
+      autofocus
+    >
+    <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+      <button class="btn-ghost" (click)="showAddColumn.set(false)">Cancel</button>
+      <button class="btn-primary" (click)="addColumn()">Create Column</button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Edit Column Modal -->
+@if (editingColumn()) {
+<div class="modal-overlay">
+  <div class="modal-content">
+    <h3 style="margin-bottom: 0.5rem;">Rename Column</h3>
+    <p>Change the name of this phase in your workflow.</p>
+    <input 
+      type="text" 
+      [(ngModel)]="editColumnTitle" 
+      placeholder="Column Name"
+      (keyup.enter)="saveEditColumn()"
+      style="margin-bottom: 1.5rem;"
+      autofocus
+    >
+    <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+      <button class="btn-ghost" (click)="editingColumn.set(null)">Cancel</button>
+      <button class="btn-primary" (click)="saveEditColumn()">Save</button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Add Task Modal -->
+@if (showAddTask()) {
+<div class="modal-overlay">
+  <div class="modal-content">
+    <h3 style="margin-bottom: 0.5rem;">New Task</h3>
+    <p>What needs to be done next?</p>
+    <input 
+      type="text" 
+      [(ngModel)]="newTaskTitle" 
+      placeholder="Task description"
+      (keyup.enter)="addTask()"
+      style="margin-bottom: 1.5rem;"
+      autofocus
+    >
+    <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+      <button class="btn-ghost" (click)="showAddTask.set(null)">Cancel</button>
+      <button class="btn-primary" (click)="addTask()">Add</button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Edit Task Modal -->
+@if (editingTask()) {
+<div class="modal-overlay">
+  <div class="modal-content">
+    <h3 style="margin-bottom: 0.5rem;">Edit Task</h3>
+    <p>Update the description of this card.</p>
+    <input 
+      type="text" 
+      [(ngModel)]="editTaskTitle" 
+      placeholder="Task title"
+      (keyup.enter)="saveEditTask()"
+      style="margin-bottom: 1.5rem;"
+      autofocus
+    >
+    <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+      <button class="btn-ghost" (click)="editingTask.set(null)">Cancel</button>
+      <button class="btn-primary" (click)="saveEditTask()">Save</button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Delete Column Modal -->
+@if (showDeleteColumn()) {
+<div class="modal-overlay">
+  <div class="modal-content">
+    <h3 style="margin-bottom: 0.5rem;">Delete Column</h3>
+    <p>Where should we move the tasks from this column?</p>
+    <select [(ngModel)]="transferColumnId" style="margin-bottom: 1.5rem;">
+      <option value="">Choose destination...</option>
+      @for (c of project()?.columns; track c.id) {
+        @if (c.id !== showDeleteColumn()?.columnId) {
+          <option [value]="c.id">{{ c.title }}</option>
+        }
+      }
+    </select>
+    <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+      <button class="btn-ghost" (click)="showDeleteColumn.set(null)">Cancel</button>
+      <button class="btn-primary" style="background-color: var(--danger);" (click)="confirmDeleteColumn()" [disabled]="!transferColumnId()">
+        Delete & Move
+      </button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Task Stats Modal -->
+@if (selectedTask()) {
+<div class="modal-overlay" (click)="selectedTask.set(null)">
+  <div class="modal-content" (click)="$event.stopPropagation()" style="max-width: 480px;">
+    <header style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+      <h2 style="font-size: 1.125rem; word-break: break-word; padding-right: 1.5rem;">{{ selectedTask()?.title }}</h2>
+      <button class="icon-btn" style="position: absolute; right: 1.5rem; top: 1.5rem;" (click)="selectedTask.set(null)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </header>
+    
+    <div>
+      <h4 style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border-light); padding-bottom: 0.5rem;">Time Tracking History</h4>
+      <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+        @for (log of selectedTask()?.timeLogs; track $index) {
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background-color: var(--bg-app); border: 1px solid var(--border-light); border-radius: 6px;">
+            <span style="font-weight: 500; font-size: 0.875rem; color: var(--text-primary);">{{ log.columnTitle }}</span>
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <span style="font-variant-numeric: tabular-nums; font-size: 0.875rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.25rem;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                {{ formatDuration(log.durationMs || (Date.now() - log.startTime)) }}
+              </span>
+              @if (!log.endTime) { 
+                <span style="font-size: 0.75rem; background-color: var(--success-bg); color: var(--success-text); padding: 2px 6px; border-radius: 4px; font-weight: 500; border: 1px solid rgba(4, 120, 87, 0.2);">Active</span> 
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>
+}
