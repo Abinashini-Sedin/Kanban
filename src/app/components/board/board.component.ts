@@ -2,7 +2,7 @@ import { Component, inject, signal, computed } from '@angular/core';
 import { AppStateService } from '../../store/app-state.service';
 import { ColumnService } from '../../services/columns/column.service';
 import { TaskService } from '../../services/tasks/task.service';
-import { ActivatedRoute, RouterLink, Router } from '@angular/router';
+import { ActivatedRoute, RouterModule, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { 
@@ -14,7 +14,7 @@ import { Project, Column, Task } from '../../models/kanban.model';
 @Component({
   selector: 'app-board',
   standalone: true,
-  imports: [CommonModule, FormsModule, DragDropModule, RouterLink],
+  imports: [CommonModule, FormsModule, DragDropModule, RouterModule],
   templateUrl: './board.component.html',
   styleUrl: './board.component.css'
 })
@@ -76,7 +76,6 @@ export class BoardComponent {
       this.editingTask.set(null);
     }
   }
-
   addColumn() {
     if (this.newColumnTitle().trim()) {
       this.columnService.addColumn(this.projectId, this.newColumnTitle().trim());
