@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { AppStateService } from '../../store/app-state.service';
 import { ProjectService } from '../../services/projects/project.service';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Project } from '../../models/kanban.model';
@@ -9,7 +9,7 @@ import { Project } from '../../models/kanban.model';
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css'
 })
