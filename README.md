@@ -1,59 +1,70 @@
-# Kanpan
+# ⏱️ Timed Personal Kanban
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.8.
+Welcome to the **Timed Personal Kanban**! This application is a sleek, single-user task management board built entirely on the frontend using Angular. It allows you to organize multiple projects, manage custom columns, and best of all—automatically track how much time you spend on every single task, in every single phase of your work.
 
-## Development server
+---
 
-To start a local development server, run:
+## ✨ Features
 
-```bash
-ng serve
-```
+- **No Backend, Pure Local State**: Everything stays inside your browser via local storage.
+- **Micro-Animations & Premium Design**: Enjoy our minimalist, human-friendly interface designed with an `Inter` font, soft borders, and glassmorphic touches.
+- **Multiple Projects**: Create separate workspaces for separate goals (e.g. "Work", "Side Project").
+- **Custom Workflows**: Add, rename, or delete columns to match your personal style (while keeping standard Todo and Completion states).
+- **Drag and Drop**: Simply pick a task up and throw it into the next column via Angular CDK.
+- **Automatic Time Tracking**: From the moment a task is created, a timer runs. Move it to a new column, and the old timer stops while a new one begins! Review the full history whenever you want.
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+---
 
-## Code scaffolding
+## 🏗️ Architecture & Services
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+To keep our code readable, maintainable, and highly decoupled, we recently split up our business logic into several specialized domain services. Here's how it all fits together:
 
-```bash
-ng generate component component-name
-```
+**1. `AppStateService` (`src/app/store/app-state.service.ts`)**
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+- Think of this as the "Brain" or "Database".
+- It holds the master record of your current state using **Angular Signals** (`this.state`).
+- It automatically handles saving your work to `localStorage` whenever a change happens so you never lose data on refresh.
 
-```bash
-ng generate --help
-```
+**2. `ProjectService` (`src/app/services/projects/project.service.ts`)**
 
-## Building
+- Specifically designed to create, rename, fetch, and delete _entire projects_.
 
-To build the project run:
+**3. `ColumnService` (`src/app/services/columns/column.service.ts`)**
 
-```bash
-ng build
-```
+- Focused strictly on boards. It lets you add new phases (like "Testing", "Review"), rename them, and safely delete them (we even let you move your tasks to another column when you delete one!).
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+**4. `TaskService` (`src/app/services/tasks/task.service.ts`)**
 
-## Running unit tests
+- The powerhouse of the board. Handles creating, editing, dropping/moving, and deleting tasks.
+- **It also acts as the timekeeper**. Whenever you call `moveTask`, this service actively computes how long an item was in its previous phase, closes the `timeLog`, and spawns a new one.
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+---
 
-```bash
-ng test
-```
+## 🚀 How to Run Locally
 
-## Running end-to-end tests
+You only need **Node.js** installed on your machine!
 
-For end-to-end (e2e) testing, run:
+1. **Navigate to the app folder:**
 
-```bash
-ng e2e
-```
+   ```bash
+   cd Kanban_app
+   ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+2. **Install Packages (if you haven't already):**
 
-## Additional Resources
+   ```bash
+   npm install
+   ```
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+3. **Start the Development Server:**
+
+   ```bash
+   npm start
+   ```
+
+   _(Alternatively, run `ng serve` if you have Angular CLI globally installed)_
+
+4. **Open in Browser:**
+   Go to [http://localhost:4200](http://localhost:4200)
+
+Enjoy tracking your time and organizing your tasks! 📋
